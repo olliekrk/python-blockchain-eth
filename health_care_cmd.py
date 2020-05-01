@@ -3,6 +3,12 @@ import contract_deployer
 from connector import Web3Connector, NETWORK_URL
 
 
+class HealthDataAccessContract:
+
+    def __init__(self, contract):
+        self.contract = contract
+
+
 class HealthCareShell(cmd.Cmd):
     intro = 'Welcome to the Healthcare shell.   Type help or ? to list commands.\n'
     prompt = '>'
@@ -12,6 +18,7 @@ class HealthCareShell(cmd.Cmd):
     w3 = None
     contract = None
     contact_loader = None
+    contract_access = None
 
     def _read_key(self, file_name):
         try:
@@ -29,7 +36,7 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Connection error]")
 
     def do_get_key(self, arg):
-        'Get private key from provided file'
+        """Get private key from provided file"""
         file_name = parse(arg)
         if len(file_name) == 0:
             print("[1][Not provided any file]")
@@ -37,9 +44,8 @@ class HealthCareShell(cmd.Cmd):
             self._read_key(file_name[0])
 
     def do_connect(self):
-        'Connect to network'
+        """Connect to network"""
         self._connect()
-
 
     def do_add_heartrate(self):
         pass
@@ -54,7 +60,7 @@ class HealthCareShell(cmd.Cmd):
         pass
 
     def use_contract(self, arg):
-        'Use contract from given file'
+        """Use contract from given file"""
         if not self.w3:
             print("[1][Not connected]")
             return
@@ -70,12 +76,13 @@ class HealthCareShell(cmd.Cmd):
             if not self.contact_loader:
                 self.contact_loader = contract_deployer.ContractLoader(self.w3)
             self.contract = self.contact_loader.load_by_name(file_name)
+            self.contract_access = HealthDataAccessContract(self.contract)
         except:
             print("[0][Could not read a contract from " + str(file_name) + "]")
 
 
 def parse(arg):
-    'Convert a series of zero or more numbers to an argument tuple'
+    """Convert a series of zero or more numbers to an argument tuple"""
     return tuple(arg.split())
 
 
