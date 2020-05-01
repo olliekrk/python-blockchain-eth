@@ -97,7 +97,7 @@ class ContractLoader:
         except ValueError(f"Contract {file_name} is invalid."):
             raise
         
-        return self.load_contract(contract_address, contract_abi, False)
+        return self.load_contract(self.contract_address, self.contract_abi, False)
 
     
     def _validate_contract(self, contract_address):

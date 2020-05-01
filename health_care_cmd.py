@@ -1,8 +1,6 @@
 import cmd, sys
-from turtle import *
-from app import Web3Connector
-from app import NETWORK_URL
 import contract_deployer
+from connector import Web3Connector, NETWORK_URL
 
 
 class HealthCareShell(cmd.Cmd):
