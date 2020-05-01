@@ -16,7 +16,7 @@ def _compile_source_file(file_path):
 # save contract address and ABI
 def _log_deployment_result(result, file_path):
     with open(file_path, 'w') as f:
-        json.dump(result, file_path, indent=4)
+        json.dump(result, f, indent=4)
 
 # build contract template
 def _contract_deployment(w3, contract_compiled):
@@ -49,7 +49,7 @@ class ContractDeployer:
             }
             
             print('Deploy successful. Cost: {}'.format(tx_receipt['cumulativeGasUsed']))
-            _log_deployment_result(result, 'cache/contract_{}.json'.format(current_time()))
+            _log_deployment_result(result, 'cache/access_contract_{}.json'.format(current_time()))
             return result
         except Exception as e:
             print('Failed to deploy: {}'.format(str(e)))
