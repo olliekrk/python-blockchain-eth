@@ -2,7 +2,6 @@ import json
 import os
 from web3 import Web3
 
-# INFURA_URL = "https://mainnet.infura.io/v3/YOUR_INFURA"
 NETWORK_URL = "http://127.0.0.1:7545"
 
 

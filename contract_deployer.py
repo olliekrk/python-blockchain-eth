@@ -71,28 +71,41 @@ class ContractDeployer:
 class ContractLoader:
     def __init__(self, w3):
         self.w3 = w3
+        self.contract_address = None
+        self.contract_abi = None
+        self.contract_instance = None
+        
+    
+    def load_contract(self, contract_address, contract_abi, cache=True, cache_name=None):
+        self._validate_contract(contract_address)
+        self.contract_instance = self.w3.eth.contract(abi=contract_abi,address=contract_address)
+        if cache:
+            if cache_name is None:
+                cache_name = 'cache/loaded_contract_{}'.format(current_time())
+                    
+            _log_deployment_result({'contract_abi': contract_abi, 'contract_address': contract_address}, cache_name)
+        
+        return self.contract_instance
         
         
     def load_by_name(self, file_name):
         with open(f'cache/{file_name}', 'r') as f:
             result = json.load(f)
-            
         try:
             self.contract_address = result['contract_address']
+            self.contract_abi = result['contract_abi']
         except ValueError(f"Contract {file_name} is invalid."):
             raise
         
-        contract_bytecode_length = len(self.w3.eth.getCode(self.contract_address).hex())
+        return self.load_contract(contract_address, contract_abi, False)
+
+    
+    def _validate_contract(self, contract_address):
+        contract_bytecode_length = len(self.w3.eth.getCode(contract_address).hex())
         try:
             assert (contract_bytecode_length > 4), f"Contract not deployed at {self.contract_address}"
         except AssertionError as e:
             print(str(e))
             raise
         
-        self.contract_instance = self.w3.eth.contract(
-            abi=result['contract_abi'],
-            address=result['contract_address']
-        )
-        
-        return self.contract_instance
             
