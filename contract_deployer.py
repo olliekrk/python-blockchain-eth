@@ -23,30 +23,50 @@ def _contract_deployment(w3, contract_compiled):
     return w3.eth.contract(
         abi=contract_compiled['abi'],
         bytecode=contract_compiled['bin'])
-
-# build health data access contract and return its address and ABI on success
-def build_health_data_access_contract(w3, data):
-    path = 'contracts/HealthDataAccess.sol'
-    compiled = _compile_source_file(path)
-    contract_id, contract_compiled = compiled.popitem()
     
-    deployment = _contract_deployment(w3, contract_compiled)
-    estimate = deployment.constructor(data).estimateGas()
-    print('The estimated cost of deploying access contract is {}'.format(estimate))
-    try:
-        tx_hash = deployment.constructor(data).transact()
-        tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+class ContractDeployer:
+    def __init__(self, w3, account, private_key):
+        self.w3 = w3
+        self.account = account
+        self.w3.eth.defaultAccount = account
+        self.private_key = private_key
+
+    # build health data access contract and return its address and ABI on success        
+    def deploy_data_access_contract(self, data, path='contracts/HealthDataAccess.sol'):
+        compiled = _compile_source_file(path)
+        contract_id, contract_compiled = compiled.popitem()
         
-        result = {
-            'contract_abi': contract_compiled['abi'],
-            'contract_address': tx_receipt['contractAddress']
-        }
+        deployment = _contract_deployment(self.w3, contract_compiled)
+        estimate = deployment.constructor(data).estimateGas()
+        print('The estimated cost of deploying access contract is {}'.format(estimate))
+        try:
+            tx = deployment.constructor(data).buildTransaction()
+            tx_receipt = self._send_signed_transaction(tx)
+            
+            result = {
+                'contract_abi': contract_compiled['abi'],
+                'contract_address': tx_receipt['contractAddress']
+            }
+            
+            print('Deploy successful. Cost: {}'.format(tx_receipt['cumulativeGasUsed']))
+            _log_deployment_result(result, 'cache/contract_{}.json'.format(current_time()))
+            return result
+        except Exception as e:
+            print('Failed to deploy: {}'.format(str(e)))
+    
+    
+    def _sign_transaction(self, tx):
+        return self.w3.eth.account.signTransaction(tx, self.private_key)
         
-        print('Deploy successful. Cost: {}'.format(tx_receipt['cumulativeGasUsed']))
-        _log_deployment_result(result, 'cache/contract_{}.json'.format(current_time()))
-        return result
-    except Exception as e:
-        print('Failed to deploy: {}'.format(str(e)))
+        
+    def _send_signed_transaction(self, tx):
+        tx.update({'nonce': self.w3.eth.getTransactionCount(self.account)})
+        tx_signed = self._sign_transaction(tx)
+        tx_hash = self.w3.eth.sendRawTransaction(tx_signed.rawTransaction)
+        tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
+        return tx_receipt
+    
+    
 
 class ContractLoader:
     def __init__(self, w3):
