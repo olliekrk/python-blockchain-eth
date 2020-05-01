@@ -2,8 +2,8 @@ pragma solidity >=0.4.25 <0.7.0;
 
 contract HealthDataAccess {
 
-    mapping(address => bool) public userAccess;
-    HeartMeasurement[] public measurements;
+    mapping(address => bool) private userAccess;
+    HeartMeasurement[] private measurements;
     string data; // simulates pointer to data stored in a external secured storage
     address public owner;
 
