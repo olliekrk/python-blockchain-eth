@@ -3,7 +3,7 @@ import time
 import json
 import pprint
 
-from solc import compile_source
+from solcx import compile_source
 
 current_time = lambda: int(round(time.time() * 1000))
 

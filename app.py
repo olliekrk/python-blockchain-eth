@@ -41,7 +41,7 @@ class Web3Connector:
             return None
 
 
-# w3 = Web3Connector(NETWORK_URL)
+w3 = Web3Connector(NETWORK_URL)
 #
 # address1 = w3.w3.eth.accounts[0]
 # address2 = w3.w3.eth.accounts[1]
