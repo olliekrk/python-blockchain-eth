@@ -40,8 +40,7 @@ contract HealthDataAccess {
     }
 
     function getLastMeasurement() public view
-        returns (uint256 timestamp, uint _bpm)
-        {
+        returns (uint256 timestamp, uint _bpm) {
             require(
                 userAccess[msg.sender] == true,
                 "No access"
@@ -51,7 +50,27 @@ contract HealthDataAccess {
 
 
             return (measurement.timestamp, measurement.bpm);
-        }
+    }
+
+    function getMeasurements() public view
+        returns (uint256[] memory, uint[] memory) {
+
+            require(
+                userAccess[msg.sender] == true,
+                "No access"
+            );
+
+            uint256[] memory timestamps = new uint256[](measurements.length);
+            uint[]    memory bpms = new uint[](measurements.length);
+
+            for (uint i = 0; i < measurements.length; i++) {
+                HeartMeasurement storage measurement = measurements[i];
+                timestamps[i] = measurement.timestamp;
+                bpms[i] = measurement.bpm;
+            }
+
+            return (timestamps, bpms);
+    }
 
 
 
