@@ -26,6 +26,20 @@ abi = json.loads("""[
       "type": "function"
     },
     {
+      "constant": true,
+      "inputs": [],
+      "name": "doctor",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -37,7 +51,7 @@ abi = json.loads("""[
         {
           "indexed": false,
           "name": "date",
-          "type": "string"
+          "type": "uint256"
         },
         {
           "indexed": false,
@@ -52,11 +66,6 @@ abi = json.loads("""[
         {
           "indexed": false,
           "name": "patient",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "name": "doctor",
           "type": "address"
         }
       ],
@@ -69,7 +78,7 @@ abi = json.loads("""[
         {
           "indexed": false,
           "name": "date",
-          "type": "string"
+          "type": "uint256"
         },
         {
           "indexed": false,
@@ -84,11 +93,6 @@ abi = json.loads("""[
         {
           "indexed": false,
           "name": "patient",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "name": "doctor",
           "type": "address"
         }
       ],
@@ -106,7 +110,7 @@ abi = json.loads("""[
         },
         {
           "name": "",
-          "type": "string[]"
+          "type": "uint256[]"
         },
         {
           "name": "",
@@ -126,7 +130,7 @@ abi = json.loads("""[
         },
         {
           "name": "_date",
-          "type": "string"
+          "type": "uint256"
         },
         {
           "name": "_price",
@@ -144,7 +148,7 @@ abi = json.loads("""[
       "inputs": [
         {
           "name": "_date",
-          "type": "string"
+          "type": "uint256"
         }
       ],
       "name": "bookAppointment",
@@ -156,14 +160,14 @@ abi = json.loads("""[
   ]""")
 
 #Wy macie inny
-address = web3.toChecksumAddress('0x6271DC93CdC42eaf6ec5dF5D25807dFFac7011ED')
+address = web3.toChecksumAddress('0xC79811ccB67Cd4182038f96Fc3a0b1fd102eb5c1')
 contract = web3.eth.contract(address=address, abi=abi)
 # current date and time
 now = datetime.now()
 
-# timestamp = datetime.timestamp(now)
+timestamp = datetime.timestamp(now)
 # print("timestamp =", timestamp)
 
-print(contract.functions.createAppointment("dermatolog","20-08-2019",10).transact())
-print(contract.functions.bookAppointment("20-08-2019").transact({'from': web3.eth.accounts[1],'value': web3.toWei(2,'ether')}))
+print(contract.functions.createAppointment("dermatolog",int(timestamp),10).transact())
+print(contract.functions.bookAppointment(int(timestamp)).transact({'from': web3.eth.accounts[1],'value': web3.toWei(2,'ether')}))
 print(contract.functions.printAppointments().call())
