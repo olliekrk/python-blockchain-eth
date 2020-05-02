@@ -5,37 +5,32 @@ import json
 import backoff
 import asyncio
 import paho.mqtt.client as mqtt
+from mqtt_defaults import *
 
-DEFAULT_HOST = '127.0.0.1'
-DEFAULT_PORT = 1883
-KEEPALIVE = 30
-BACKOFF_INTERVAL = 1
-MEASUREMENT_INTERVAL_MAX = 5 # [0, 1) * MAX
-HEART_RATE_TOPIC = 'heart_rate'
+MEASUREMENT_INTERVAL_MAX = 3 # 0-3 s delay in publishing measurement data
 
 """
 Example of IoT Device which measures heart rate of the wearer
 and publishes the data on a appropriate MQTT topic.
 """
 
-def _on_connect(client, userdata, flags, rc):
-    print('Connection success!' if rc == 0 else f'Connection failure: ({rc})')
-
-def _on_disconnect(client, userdata, rc):
-    print(f'Disconnected. ({rc})')
-    
-def _on_publish(client, userdata, mid):
-    print(f'Published message no. {mid}!')
+def _timestamp_now():
+    return int(round(time.time())*1000)
 
 class SmartBand(mqtt.Client):
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
-        super().__init__(f'SmartBand_{int(time.time())}')
-        self.on_connect = _on_connect
-        self.on_disconnect = _on_disconnect
-        self.on_publish = _on_publish
+        super().__init__(f'SmartBand_{_timestamp_now()}')
         self.connect_async(host, port, KEEPALIVE)
-    
-    
+            
+    def on_connect(self, client, userdata, flags, rc):
+        print(mqtt.connack_string(rc))
+        
+    def on_disconnect(self, client, userdata, rc):
+        print(f'Disconnected. ({rc})')
+        
+    def on_publish(self, client, userdata, mid):
+        print(f'Published message no. {mid}!')
+
     @backoff.on_exception(backoff.constant, Exception, interval=BACKOFF_INTERVAL)
     async def start_measurement(self):
         """Starts receiving measurement data and publishing it to the MQTT topic"""
@@ -50,19 +45,22 @@ class SmartBand(mqtt.Client):
     
     def _publish_measurement(self, measurement):
         message = json.dumps(measurement)
-        message_info = self.publish(topic=HEART_RATE_TOPIC, payload=message, qos=1)
-        print(f'Publishing... {message}')
+        mid = self.publish(topic=HEART_RATE_TOPIC, payload=message, qos=1)[1]
+        print(f'Publishing message no. {mid} {message}')
     
     @classmethod
     def _heart_rate_measurement(cls):
+        BPM_MIN = 40
+        BPM_MAX = 120
+        BPM_STEP = 2
         while True:
             yield {
-                'bpm' : random.randrange(40, 120, 2),
-                'timestamp' : int(round(time.time()) * 1000)
+                'bpm' : random.randrange(BPM_MIN, BPM_MAX, BPM_STEP),
+                'timestamp' : _timestamp_now()
             }
 
 
-def run():
+def _run():
     random.seed()
     args = sys.argv
     try:
@@ -88,6 +86,6 @@ def run():
         loop.close()
     
 if __name__ == '__main__':
-    run()
+    _run()
     
         
