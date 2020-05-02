@@ -34,6 +34,9 @@ class AppointmentBooking:
             print(e)
             print("[1][Error!]")
 
+    def print_appointments(self):
+        print(self.contract.functions.printAppointments().call())
+
 
 class HealthDataAccessContract:
 
