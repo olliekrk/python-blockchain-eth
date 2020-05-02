@@ -1,4 +1,6 @@
 import cmd, sys
+import time
+
 import contract_deployer
 from connector import Web3Connector, NETWORK_URL
 
@@ -9,8 +11,9 @@ class HealthDataAccessContract:
         self.contract = contract
 
     def add_heartrate(self, heartrate):
-        pass
-        # result = self.contract.functions.
+        date = int(time.time()*1000)
+        result = self.contract.functions.addMeasurement(heartrate, date).call()
+        print(result)
 
     def get_data(self):
         result = self.contract.functions.getMeasurements().call()
@@ -21,10 +24,12 @@ class HealthDataAccessContract:
         print(result)
 
     def grant_access(self, argument):
-        pass
+        result = self.contract.functions.grantAccess(argument).call()
+        print(result)
 
     def revoke_access(self, argument):
-        pass
+        result = self.contract.functions.revokeAccess(argument).call()
+        print(result)
 
 
 class HealthCareShell(cmd.Cmd):
