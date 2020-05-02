@@ -37,6 +37,13 @@ grant_access (account address)
 - that grants access to reading data for given account (only contracts owner can execute this)
 revoke_access  (account address)
 - that revokes access to reading data for given account (only contracts owner can execute this)
+
+Some flow examples:
+
+![Image1](./flow1.png)
+![Image2](./flow.png)
+
+
 '''
 
 #### Tools:
