@@ -70,10 +70,12 @@ class HealthCareShell(cmd.Cmd):
             self._login(args[0], args[1])
 
     def do_connect(self, arg):
-        """Connect to network"""
+        """Connect to blockchain network"""
         self._connect()
+        print("[0][Connected successful]")
 
     def do_add_heartrate(self, arg):
+        """Adds new heartrate entry, gets 2 args: heartrate and timestamp"""
         if self.contract_access is None:
             print("[1][Not selected contract!]")
             return
@@ -84,6 +86,7 @@ class HealthCareShell(cmd.Cmd):
             self.contract_access.add_heartrate(arguments[0], arguments[1])
 
     def do_get_my_data(self, arg):
+        """Gets list of all heartrate data from contract selected previously"""
         if self.contract_access is None:
             print("[1][Not selected contract!]")
             return
@@ -93,6 +96,7 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Error]")
 
     def do_get_my_last_data(self, arg):
+        """Gets last heartrate data from contract selected previously"""
         if self.contract_access is None:
             print("[1][Not selected contract!]")
             return
@@ -102,6 +106,7 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Error]")
 
     def do_grant_access(self, arg):
+        """Grants access to heartrate data from contract selected previously. Takes account as argument"""
         if self.contract_access is None:
             print("[1][Not selected contract!]")
             return
@@ -112,6 +117,7 @@ class HealthCareShell(cmd.Cmd):
             self.contract_access.grant_access(argument)
 
     def do_revoke_access(self, arg):
+        """Revokes access to heartrate data from contract selected previously. Takes account as argument"""
         if self.contract_access is None:
             print("[1][Not selected contract!]")
             return
@@ -135,6 +141,8 @@ class HealthCareShell(cmd.Cmd):
             print("[0][Using given contract]")
 
     def do_deploy_data_access_contract(self, arg):
+        """Create new smart contract for logged account and deployes it. Also selects created contracs as currently
+        used """
         if not self.deployer:
             print("[1][Login first!]")
             return
