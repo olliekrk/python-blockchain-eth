@@ -1,7 +1,9 @@
 import cmd, sys
+import threading
 
 import contract_deployer
 from connector import Web3Connector, NETWORK_URL
+from mqtt import smart_listener
 
 
 class HealthDataAccessContract:
@@ -198,4 +200,10 @@ def parse(arg):
 
 
 if __name__ == '__main__':
-    HealthCareShell().cmdloop()
+    h = HealthCareShell()
+
+    t = threading.Thread(target = smart_listener._run, args=(h,))
+    t.daemon = True
+    t.start()
+
+    h.cmdloop()

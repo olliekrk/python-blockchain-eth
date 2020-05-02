@@ -54,9 +54,11 @@ class SmartBand(mqtt.Client):
         BPM_MAX = 120
         BPM_STEP = 2
         while True:
-            yield {
+            yield { # TODO
                 'bpm' : random.randrange(BPM_MIN, BPM_MAX, BPM_STEP),
-                'timestamp' : _timestamp_now()
+                'timestamp' : _timestamp_now(),
+                "account":"<TODO ACCOUNT HERE>>",
+                "key":"<TODO KEY HERE>"
             }
 
 

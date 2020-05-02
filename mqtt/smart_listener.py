@@ -2,16 +2,17 @@ import sys
 import time
 import json
 import paho.mqtt.client as mqtt
-from mqtt_defaults import *
+from .mqtt_defaults import *
 
 def _timestamp_now():
     return int(round(time.time())*1000)
 
 
 class SmartMQTTListener(mqtt.Client):
-    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
+    def __init__(self, h, host=DEFAULT_HOST, port=DEFAULT_PORT):
         super().__init__(f'SmartListener_{_timestamp_now()}')
         self.connect_async(host, port, KEEPALIVE)
+        self.h = h
         
     def listen_on_topic(self, topic, callback, qos=DEFAULT_QOS):
         self.message_callback_add(topic, callback)
@@ -37,8 +38,13 @@ class SmartMQTTListener(mqtt.Client):
     def _on_heart_rate_message(self, client, userdata, message):
         message_json = json.loads(message.payload)
         print(f'Topic: [{message.topic}] Message: [{message_json}]')
-        # todo: this should push data to the smart contract
-        
+
+        self.h._connect()
+        self.h._login(message_json["account"],message_json["key"])
+        self.h._read_contract("access_contract_1588433638950.json")
+        self.h.contract_access.add_heartrate(message_json["bpm"],message_json["timestamp"])
+
+
     def _on_new_appointment_message(self, client, userdata, message):
         message_json = json.loads(message.payload)
         print(f'Topic: [{message.topic}] Message: [{message_json}]')
@@ -50,13 +56,13 @@ class SmartMQTTListener(mqtt.Client):
         # todo
       
              
-def _run():
+def _run(h):
     args = sys.argv
     try:
         if len(args) >= 3:
-            listener = SmartMQTTListener(args[1], int(args[2]))
+            listener = SmartMQTTListener(h,args[1], int(args[2]))
         else:
-            listener = SmartMQTTListener()
+            listener = SmartMQTTListener(h)
     except ConnectionRefusedError as e:
         print(f'Failed to connect to MQTT. Default configuration is {DEFAULT_HOST}:{DEFAULT_PORT}')
         sys.exit(1)
@@ -71,6 +77,6 @@ def _run():
         listener.disconnect()
 
 
-if __name__ == '__main__':
-    _run()
+# if __name__ == '__main__':
+#     _run()
          
