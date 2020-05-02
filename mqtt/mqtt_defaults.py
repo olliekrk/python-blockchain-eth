@@ -3,4 +3,7 @@ DEFAULT_PORT = 1883
 DEFAULT_QOS = 1
 KEEPALIVE = 30
 BACKOFF_INTERVAL = 1
+
 HEART_RATE_TOPIC = 'smart/heart_rate'
+SMART_APPOINTMENTS_NEW_TOPIC = 'smart/appointment/new'
+SMART_APPOINTMENTS_BOOK_TOPIC = 'smart/appointment/book'

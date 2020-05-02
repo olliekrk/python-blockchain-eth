@@ -29,7 +29,7 @@ class SmartBand(mqtt.Client):
         print(f'Disconnected. ({rc})')
         
     def on_publish(self, client, userdata, mid):
-        print(f'Published message no. {mid}!')
+        print(f'({mid}) Message published!')
 
     @backoff.on_exception(backoff.constant, Exception, interval=BACKOFF_INTERVAL)
     async def start_measurement(self):
@@ -46,7 +46,7 @@ class SmartBand(mqtt.Client):
     def _publish_measurement(self, measurement):
         message = json.dumps(measurement)
         mid = self.publish(topic=HEART_RATE_TOPIC, payload=message, qos=1)[1]
-        print(f'Publishing message no. {mid} {message}')
+        print(f'({mid}) Publishing message: {message}')
     
     @classmethod
     def _heart_rate_measurement(cls):

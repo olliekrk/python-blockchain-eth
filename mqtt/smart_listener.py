@@ -18,10 +18,22 @@ class SmartMQTTListener(mqtt.Client):
         print(f'Subscribing to the [{HEART_RATE_TOPIC}] topic...')
         self.subscribe(HEART_RATE_TOPIC, qos)
         
+    def listen_for_new_appointments(self, qos=DEFAULT_QOS):
+        self.message_callback_add(SMART_APPOINTMENTS_NEW_TOPIC, self._on_new_appointment_message)
+        print(f'Subscribing to the [{SMART_APPOINTMENTS_NEW_TOPIC}] topic...')
+        self.subscribe(SMART_APPOINTMENTS_NEW_TOPIC, qos)
+    
+    def listen_for_book_appointments(self, qos=DEFAULT_QOS):
+        self.message_callback_add(SMART_APPOINTMENTS_BOOK_TOPIC, self._on_book_appointment_message)
+        print(f'Subscribing to the [{SMART_APPOINTMENTS_BOOK_TOPIC}] topic...')
+        self.subscribe(SMART_APPOINTMENTS_BOOK_TOPIC, qos)
+    
     def on_connect(self, client, userdata, flags, rc):
         print(mqtt.connack_string(rc))
         if rc == 0:
             self.listen_for_heart_rate_data()
+            self.listen_for_new_appointments()
+            self.listen_for_book_appointments()
             
     def on_disconnect(self, client, userdata, rc):
         print(f'Disconnected. (code: {rc})')
@@ -36,6 +48,16 @@ class SmartMQTTListener(mqtt.Client):
         message_json = json.loads(message.payload)
         print(f'Topic: [{message.topic}] Message: [{message_json}]')
         # todo: this should push data to the smart contract
+        
+    def _on_new_appointment_message(self, client, userdata, message):
+        message_json = json.loads(message.payload)
+        print(f'Topic: [{message.topic}] Message: [{message_json}]')
+        # todo
+        
+    def _on_book_appointment_message(self, client, userdata, message):
+        message_json = json.loads(message.payload)
+        print(f'Topic: [{message.topic}] Message: [{message_json}]')
+        # todo
       
              
 def _run():
