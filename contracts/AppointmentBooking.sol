@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 contract AppointmentBooking {
     string public name;
-    string [] private dates;
+    string[] private dates;
     mapping(string => Appointment) appointments;
 
     struct Appointment {
