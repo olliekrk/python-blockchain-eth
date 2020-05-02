@@ -8,6 +8,24 @@ class HealthDataAccessContract:
     def __init__(self, contract):
         self.contract = contract
 
+    def add_heartrate(self, heartrate):
+        pass
+        # result = self.contract.functions.
+
+    def get_data(self):
+        result = self.contract.functions.getMeasurements().call()
+        print(result)
+
+    def get_last_data(self):
+        result = self.contract.functions.getLastMeasurement.call()
+        print(result)
+
+    def grant_access(self, argument):
+        pass
+
+    def revoke_access(self, argument):
+        pass
+
 
 class HealthCareShell(cmd.Cmd):
     intro = 'Welcome to the Healthcare shell.   Type help or ? to list commands.\n'
@@ -47,17 +65,49 @@ class HealthCareShell(cmd.Cmd):
         """Connect to network"""
         self._connect()
 
-    def do_add_heartrate(self):
-        pass
+    def do_add_heartrate(self, arg):
+        if self.contract_access is None:
+            print("[1][Not selected contract!]")
+            return
+        argument = parse(arg)
+        if len(argument) == 0:
+            print("[1][Not provided any argument]")
+        else:
+            self.contract_access.add_heartrate(argument)
 
     def do_get_my_data(self):
-        pass
+        if self.contract_access is None:
+            print("[1][Not selected contract!]")
+            return
 
-    def do_grant_access(self):
-        pass
+        self.contract_access.get_data()
 
-    def do_revoke_access(self):
-        pass
+    def do_get_my_last_data(self):
+        if self.contract_access is None:
+            print("[1][Not selected contract!]")
+            return
+
+        self.contract_access.get_last_data()
+
+    def do_grant_access(self, arg):
+        if self.contract_access is None:
+            print("[1][Not selected contract!]")
+            return
+        argument = parse(arg)
+        if len(argument) == 0:
+            print("[1][Not provided any argument]")
+        else:
+            self.contract_access.grant_access(argument)
+
+    def do_revoke_access(self, arg):
+        if self.contract_access is None:
+            print("[1][Not selected contract!]")
+            return
+        argument = parse(arg)
+        if len(argument) == 0:
+            print("[1][Not provided any argument]")
+        else:
+            self.contract_access.revoke_access(argument)
 
     def use_contract(self, arg):
         """Use contract from given file"""
@@ -74,7 +124,7 @@ class HealthCareShell(cmd.Cmd):
     def _read_contract(self, file_name):
         try:
             if not self.contact_loader:
-                self.contact_loader = contract_deployer.ContractLoader(self.w3)
+                self.contact_loader = contract_deployer.ContractLoader(self.w3.w3)
             self.contract = self.contact_loader.load_by_name(file_name)
             self.contract_access = HealthDataAccessContract(self.contract)
         except:
