@@ -20,7 +20,7 @@ health_care_cmd test flow:
 * type following commands:
 * connect
 >(connects to blockchain)
-* login (account from ganache) (account pk from ganache)
+* login (account address from ganache) (account pk from ganache)
 >(like login 0x344.... 12rf21ccac22e...)
 * deploy_data_access_contract
 >(creates and deploys smart contract for given account  
@@ -31,6 +31,12 @@ use_contract (file name) )
 >(adds new heartrate measurement entry)
 * get_my_data
 >(shows all data from selected previously contract)
+
+You can also in health_care_cmd use commands:
+grant_access (account address)
+- that grants access to reading data for given account (only contracts owner can execute this)
+revoke_access  (account address)
+- that revokes access to reading data for given account (only contracts owner can execute this)
 '''
 
 #### Tools:

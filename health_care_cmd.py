@@ -16,21 +16,24 @@ class HealthDataAccessContract:
             receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
 
             print(receip)
-        except:
+        except Exception as e:
+            print(e)
             print("[1][Error!]")
 
     def get_data(self):
         try:
             result = self.contract.functions.getMeasurements().call()
             print(result)
-        except:
+        except Exception as e:
+            print(e)
             print("[1][Error!]")
 
     def get_last_data(self):
         try:
             result = self.contract.functions.getLastMeasurement().call()
             print(result)
-        except:
+        except Exception as e:
+            print(e)
             print("[1][Error!]")
 
     def grant_access(self, argument):
@@ -39,7 +42,8 @@ class HealthDataAccessContract:
             receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
 
             print(receip)
-        except:
+        except Exception as e:
+            print(e)
             print("[1][Error!]")
 
     def revoke_access(self, argument):
@@ -48,7 +52,8 @@ class HealthDataAccessContract:
             receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
 
             print(receip)
-        except:
+        except Exception as e:
+            print(e)
             print("[1][Error!]")
 
 
@@ -128,7 +133,7 @@ class HealthCareShell(cmd.Cmd):
         if len(argument) == 0:
             print("[1][Not provided any argument]")
         else:
-            self.contract_access.grant_access(argument)
+            self.contract_access.grant_access(argument[0])
 
     def do_revoke_access(self, arg):
         """Revokes access to heartrate data from contract selected previously. Takes account as argument"""
@@ -139,7 +144,7 @@ class HealthCareShell(cmd.Cmd):
         if len(argument) == 0:
             print("[1][Not provided any argument]")
         else:
-            self.contract_access.revoke_access(argument)
+            self.contract_access.revoke_access(argument[0])
 
     def do_use_contract(self, arg):
         """Use contract from given file"""
