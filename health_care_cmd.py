@@ -6,12 +6,15 @@ from connector import Web3Connector, NETWORK_URL
 
 class HealthDataAccessContract:
 
-    def __init__(self, contract):
+    def __init__(self, contract, w3):
         self.contract = contract
+        self.w3 = w3
 
     def add_heartrate(self, heartrate, date):
-        result = self.contract.functions.addMeasurement(int(heartrate), int(date)).call()
-        print(result)
+        hash_tx = self.contract.functions.addMeasurement(int(heartrate), int(date)).transact()
+        receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+
+        print(receip)
 
     def get_data(self):
         result = self.contract.functions.getMeasurements().call()
@@ -22,12 +25,16 @@ class HealthDataAccessContract:
         print(result)
 
     def grant_access(self, argument):
-        result = self.contract.functions.grantAccess(argument).call()
-        print(result)
+        hash_tx = self.contract.functions.grantAccess(argument).transact()
+        receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+
+        print(receip)
 
     def revoke_access(self, argument):
-        result = self.contract.functions.revokeAccess(argument).call()
-        print(result)
+        hash_tx = self.contract.functions.revokeAccess(argument).transact()
+        receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+
+        print(receip)
 
 
 class HealthCareShell(cmd.Cmd):
@@ -84,6 +91,7 @@ class HealthCareShell(cmd.Cmd):
             self.contract_access.get_data()
         except:
             print("[1][Error]")
+
     def do_get_my_last_data(self, arg):
         if self.contract_access is None:
             print("[1][Not selected contract!]")
@@ -133,22 +141,23 @@ class HealthCareShell(cmd.Cmd):
 
         result = self.deployer.deploy_data_access_contract("Magic_String")
         self.contract = self.contract_loader.load_contract(result["contract_address"], result["contract_abi"])
-        self.contract_access = HealthDataAccessContract(self.contract)
+        self.contract_access = HealthDataAccessContract(self.contract, self.w3.w3)
         print("[0][Deployed and loaded contract]")
 
     def _read_contract(self, file_name):
         try:
             self.contract = self.contract_loader.load_by_name(file_name)
-            self.contract_access = HealthDataAccessContract(self.contract)
+            self.contract_access = HealthDataAccessContract(self.contract, self.w3.w3)
         except Exception as e:
             print(e)
             print("[0][Could not read a contract from " + str(file_name) + "]")
 
     def _login(self, account, key):
-        #print(str(account))
-        #print(str(key))
+        # print(str(account))
+        # print(str(key))
         self.deployer = contract_deployer.ContractDeployer(self.w3.w3, str(account), str(key))
         print("[0][Login succesfull]")
+
 
 def parse(arg):
     """Convert a series of zero or more numbers to an argument tuple"""
