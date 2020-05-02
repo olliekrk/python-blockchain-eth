@@ -13,27 +13,17 @@ class SmartMQTTListener(mqtt.Client):
         super().__init__(f'SmartListener_{_timestamp_now()}')
         self.connect_async(host, port, KEEPALIVE)
         
-    def listen_for_heart_rate_data(self, qos=DEFAULT_QOS):
-        self.message_callback_add(HEART_RATE_TOPIC, self._on_heart_rate_message)
-        print(f'Subscribing to the [{HEART_RATE_TOPIC}] topic...')
-        self.subscribe(HEART_RATE_TOPIC, qos)
+    def listen_on_topic(self, topic, callback, qos=DEFAULT_QOS):
+        self.message_callback_add(topic, callback)
+        print(f'Subscribing to the [{topic}] topic...')
+        self.subscribe(topic, qos)
         
-    def listen_for_new_appointments(self, qos=DEFAULT_QOS):
-        self.message_callback_add(SMART_APPOINTMENTS_NEW_TOPIC, self._on_new_appointment_message)
-        print(f'Subscribing to the [{SMART_APPOINTMENTS_NEW_TOPIC}] topic...')
-        self.subscribe(SMART_APPOINTMENTS_NEW_TOPIC, qos)
-    
-    def listen_for_book_appointments(self, qos=DEFAULT_QOS):
-        self.message_callback_add(SMART_APPOINTMENTS_BOOK_TOPIC, self._on_book_appointment_message)
-        print(f'Subscribing to the [{SMART_APPOINTMENTS_BOOK_TOPIC}] topic...')
-        self.subscribe(SMART_APPOINTMENTS_BOOK_TOPIC, qos)
-    
     def on_connect(self, client, userdata, flags, rc):
         print(mqtt.connack_string(rc))
         if rc == 0:
-            self.listen_for_heart_rate_data()
-            self.listen_for_new_appointments()
-            self.listen_for_book_appointments()
+            self.listen_on_topic(HEART_RATE_TOPIC, self._on_heart_rate_message)
+            self.listen_on_topic(SMART_APPOINTMENTS_BOOK_TOPIC, self._on_book_appointment_message)
+            self.listen_on_topic(SMART_APPOINTMENTS_NEW_TOPIC, self._on_new_appointment_message)
             
     def on_disconnect(self, client, userdata, rc):
         print(f'Disconnected. (code: {rc})')
