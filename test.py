@@ -23,15 +23,13 @@ abi = json.loads("""[
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x06fdde03"
+      "type": "function"
     },
     {
       "inputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "constructor",
-      "signature": "constructor"
+      "type": "constructor"
     },
     {
       "anonymous": false,
@@ -63,8 +61,7 @@ abi = json.loads("""[
         }
       ],
       "name": "AppointmentCreated",
-      "type": "event",
-      "signature": "0xd4b90129ae99e8ad73ce5e9db530a6b1bd0595b15666ec560b427d56545d4db0"
+      "type": "event"
     },
     {
       "anonymous": false,
@@ -96,8 +93,7 @@ abi = json.loads("""[
         }
       ],
       "name": "AppointmentBooked",
-      "type": "event",
-      "signature": "0x8c888748e05b7e429cf1a1c89cdcee30cf7a53e925cce5c76a1c307617fc036e"
+      "type": "event"
     },
     {
       "constant": true,
@@ -119,8 +115,7 @@ abi = json.loads("""[
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x9053afdb"
+      "type": "function"
     },
     {
       "constant": false,
@@ -142,8 +137,7 @@ abi = json.loads("""[
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function",
-      "signature": "0x85ab23c9"
+      "type": "function"
     },
     {
       "constant": false,
@@ -157,13 +151,12 @@ abi = json.loads("""[
       "outputs": [],
       "payable": true,
       "stateMutability": "payable",
-      "type": "function",
-      "signature": "0x36161283"
+      "type": "function"
     }
   ]""")
 
 #Wy macie inny
-address = web3.toChecksumAddress('0x3f27b7A16e0bF04B88D3532aBc1C89991EE3e95A')
+address = web3.toChecksumAddress('0x6271DC93CdC42eaf6ec5dF5D25807dFFac7011ED')
 contract = web3.eth.contract(address=address, abi=abi)
 # current date and time
 now = datetime.now()
@@ -172,5 +165,5 @@ now = datetime.now()
 # print("timestamp =", timestamp)
 
 print(contract.functions.createAppointment("dermatolog","20-08-2019",10).transact())
-print(contract.functions.bookAppointment("20-08-2019").transact({'from': web3.eth.accounts[0],'value': web3.toWei(2,'ether')}))
+print(contract.functions.bookAppointment("20-08-2019").transact({'from': web3.eth.accounts[1],'value': web3.toWei(2,'ether')}))
 print(contract.functions.printAppointments().call())

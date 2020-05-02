@@ -78,6 +78,7 @@ contract AppointmentBooking {
         require(_appointment.patient == address(0));
 
         require(msg.value >= _appointment.price);
+        require(_appointment.doctor != msg.sender);
 
 
         _appointment.patient = msg.sender;
