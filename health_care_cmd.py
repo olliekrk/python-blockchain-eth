@@ -1,9 +1,38 @@
 import cmd, sys
 import threading
+from datetime import datetime
 
 import contract_deployer
 from connector import Web3Connector, NETWORK_URL
 from mqtt import smart_listener
+
+
+class AppointmentBooking:
+
+    def __init__(self, contract, w3):
+        self.contract = contract
+        self.w3 = w3
+
+    def add_appointment(self, name, timestamp, price):
+        try:
+            date = datetime.fromtimestamp(timestamp).replace(microsecond=0, second=0, minute=0)
+            hash_tx = self.contract.functions.createAppointment(name, int(datetime.timestamp(date)), price).transact()
+            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+
+            print(receip)
+        except Exception as e:
+            print(e)
+            print("[1][Error!]")
+
+    def book_appointment(self, timestamp, price, account):
+        try:
+            date = datetime.fromtimestamp(timestamp).replace(microsecond=0, second=0, minute=0)
+            result = self.contract.functions.bookAppointment(datetime.timestamp(date)).transact(
+                {'from': account, 'value': self.web3.toWei(price, 'ether')})
+            print(result)
+        except Exception as e:
+            print(e)
+            print("[1][Error!]")
 
 
 class HealthDataAccessContract:
@@ -202,7 +231,7 @@ def parse(arg):
 if __name__ == '__main__':
     h = HealthCareShell()
 
-    t = threading.Thread(target = smart_listener._run, args=(h,))
+    t = threading.Thread(target=smart_listener._run, args=(h,))
     t.daemon = True
     t.start()
 
