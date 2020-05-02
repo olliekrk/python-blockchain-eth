@@ -11,30 +11,45 @@ class HealthDataAccessContract:
         self.w3 = w3
 
     def add_heartrate(self, heartrate, date):
-        hash_tx = self.contract.functions.addMeasurement(int(heartrate), int(date)).transact()
-        receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+        try:
+            hash_tx = self.contract.functions.addMeasurement(int(heartrate), int(date)).transact()
+            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
 
-        print(receip)
+            print(receip)
+        except:
+            print("[1][Error!]")
 
     def get_data(self):
-        result = self.contract.functions.getMeasurements().call()
-        print(result)
+        try:
+            result = self.contract.functions.getMeasurements().call()
+            print(result)
+        except:
+            print("[1][Error!]")
 
     def get_last_data(self):
-        result = self.contract.functions.getLastMeasurement().call()
-        print(result)
+        try:
+            result = self.contract.functions.getLastMeasurement().call()
+            print(result)
+        except:
+            print("[1][Error!]")
 
     def grant_access(self, argument):
-        hash_tx = self.contract.functions.grantAccess(argument).transact()
-        receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+        try:
+            hash_tx = self.contract.functions.grantAccess(argument).transact()
+            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
 
-        print(receip)
+            print(receip)
+        except:
+            print("[1][Error!]")
 
     def revoke_access(self, argument):
-        hash_tx = self.contract.functions.revokeAccess(argument).transact()
-        receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+        try:
+            hash_tx = self.contract.functions.revokeAccess(argument).transact()
+            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
 
-        print(receip)
+            print(receip)
+        except:
+            print("[1][Error!]")
 
 
 class HealthCareShell(cmd.Cmd):
@@ -53,7 +68,7 @@ class HealthCareShell(cmd.Cmd):
             self.w3 = Web3Connector(NETWORK_URL)
             self.contract_loader = contract_deployer.ContractLoader(self.w3.w3)
             print("[0][Connection successful]")
-            print(self.w3)
+            # print(self.w3)
         except:
             print("[1][Connection error]")
 
@@ -72,7 +87,6 @@ class HealthCareShell(cmd.Cmd):
     def do_connect(self, arg):
         """Connect to blockchain network"""
         self._connect()
-        print("[0][Connected successful]")
 
     def do_add_heartrate(self, arg):
         """Adds new heartrate entry, gets 2 args: heartrate and timestamp"""
@@ -138,7 +152,6 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Not provided any file]")
         else:
             self._read_contract(file_name[0])
-            print("[0][Using given contract]")
 
     def do_deploy_data_access_contract(self, arg):
         """Create new smart contract for logged account and deployes it. Also selects created contracs as currently
@@ -146,25 +159,32 @@ class HealthCareShell(cmd.Cmd):
         if not self.deployer:
             print("[1][Login first!]")
             return
-
-        result = self.deployer.deploy_data_access_contract("Magic_String")
-        self.contract = self.contract_loader.load_contract(result["contract_address"], result["contract_abi"])
-        self.contract_access = HealthDataAccessContract(self.contract, self.w3.w3)
-        print("[0][Deployed and loaded contract]")
+        try:
+            result = self.deployer.deploy_data_access_contract("Magic_String")
+            self.contract = self.contract_loader.load_contract(result["contract_address"], result["contract_abi"])
+            self.contract_access = HealthDataAccessContract(self.contract, self.w3.w3)
+            print("[0][Deployed and loaded contract]")
+        except:
+            print("[1][Deploying unsuccessful]")
 
     def _read_contract(self, file_name):
         try:
             self.contract = self.contract_loader.load_by_name(file_name)
             self.contract_access = HealthDataAccessContract(self.contract, self.w3.w3)
+            print("[0][Using given contract]")
+
         except Exception as e:
-            print(e)
-            print("[0][Could not read a contract from " + str(file_name) + "]")
+            # print(e)
+            print("[1][Could not read a contract from " + str(file_name) + "]")
 
     def _login(self, account, key):
         # print(str(account))
         # print(str(key))
-        self.deployer = contract_deployer.ContractDeployer(self.w3.w3, str(account), str(key))
-        print("[0][Login succesfull]")
+        try:
+            self.deployer = contract_deployer.ContractDeployer(self.w3.w3, str(account), str(key))
+            print("[0][Login succesfull]")
+        except:
+            print("[1][Login unsuccessful]")
 
 
 def parse(arg):
