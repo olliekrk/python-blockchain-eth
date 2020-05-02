@@ -7,7 +7,31 @@
 * Install the requirements `python3 -m pip install -r requirements.txt`
 
 ## Usage:
-> TODO
+'''
+After running Ganache:
+
+deploy_test - after changing values inside, you can test contract deployment
+test - after changing addres you can test creating new medical apoointment 
+(sends etheraum between accounts)
+
+health_care_cmd - command line interface (can be connected with IoT device)
+health_care_cmd test flow:
+* run
+* type following commands:
+* connect
+>(connects to blockchain)
+* login (account from ganache) (account pk from ganache)
+>(like login 0x344.... 12rf21ccac22e...)
+* deploy_data_access_contract
+>(creates and deploys smart contract for given account  
+  after deployment, it saves json file in cache dir  
+you can then connect to existing contract by typing:  
+use_contract (file name) )
+* add_heartrate (heartrate) (timestamp)
+>(adds new heartrate measurement entry)
+* get_my_data
+>(shows all data from selected previously contract)
+'''
 
 #### Tools:
 * Python (version >= 3.6.9)
@@ -27,6 +51,8 @@ mosquitto -c mosquitto.conf
 #### How to run Ganache
 ```
 ganache-cli -p 7545
+
+Or run Appimage downloaded from ganache and run quickstart
 ```
 
 ##### How to compile Smart Contracts
