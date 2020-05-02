@@ -3,9 +3,11 @@ import time
 import json
 import pprint
 
-from solcx import compile_source
+from solcx import compile_source, get_solc_version, install_solc
 
 current_time = lambda: int(round(time.time() * 1000))
+#install_solc('v0.5.7'
+print(get_solc_version())
 
 # compile .sol
 def _compile_source_file(file_path):

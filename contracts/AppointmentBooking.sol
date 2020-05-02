@@ -30,7 +30,7 @@ contract AppointmentBooking {
         address payable patient
     );
 
-    constructor() public {
+    constructor(string memory _data) public {
         name = "Book some appointments";
         doctor = msg.sender;
     }

@@ -101,6 +101,8 @@ class HealthCareShell(cmd.Cmd):
     contract_loader = None
     contract_access = None
     deployer = None
+    contract_booking = None
+    appointment_booking = None
 
     def _connect(self):
         try:
@@ -191,6 +193,21 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Not provided any file]")
         else:
             self._read_contract(file_name[0])
+
+    def do_deploy_appointment_booking_contract(self, arg):
+        """Create new smart contract for logged account and deployes it. Also selects created contracs as currently
+        used """
+        if not self.deployer:
+            print("[1][Login first!]")
+            return
+        try:
+            result = self.deployer.deploy_data_access_contract("Magic_String", 'contracts/AppointmentBooking.sol')
+            self.contract_booking = self.contract_loader.load_contract(result["contract_address"],
+                                                                       result["contract_abi"])
+            self.appointment_booking = AppointmentBooking(self.contract, self.w3.w3)
+            print("[0][Deployed and loaded contract]")
+        except Exception as e:
+            print(e)
 
     def do_deploy_data_access_contract(self, arg):
         """Create new smart contract for logged account and deployes it. Also selects created contracs as currently
