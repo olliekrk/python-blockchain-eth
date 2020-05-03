@@ -201,9 +201,21 @@ def start_smart_listener(health_care_shell):
                 handler.add_heartrate(message['bpm'], message['timestamp'])
             except Exception as e:
                 print(f'Failed to send heart rate data to the blockchain: {str(e)}')
+                
+    # TODO: add new_appointment_callback and book_appointment_callback implementation
+    
+    def new_appointment_callback(message):
+        pass # todo (inny_handler.zrob_cos)
+    
+    def book_appointment_callback(message):
+        pass # todo
     
     try:
-        listener = SmartMQTTListener(heart_rate_callback=heart_rate_callback, verbose=False)
+        listener = SmartMQTTListener(
+            new_appointment_callback=new_appointment_callback,
+            book_appointment_callback=book_appointment_callback,
+            heart_rate_callback=heart_rate_callback, 
+            verbose=False)
         listener.loop_forever()
     except ConnectionRefusedError as e:
         print('Failed to connect to MQTT.')

@@ -102,6 +102,12 @@ class SmartTabletCmd(cmd2.Cmd):
             })
         else:
             print('Please sign in first!')
+            
+    def do_logout(self, args):
+        """End client session and forget given credentials"""
+        self.logged_in = False
+        self.account_address = None
+        self.account_key = None
     
 
 def _run():
