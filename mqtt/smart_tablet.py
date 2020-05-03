@@ -48,6 +48,12 @@ def _login_parser():
     return parser
 
 
+def _login_file_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--credentials', required=True, action='store', help='Load using JSON credentials file')
+    return parser
+
+
 def _new_appointment_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--name', required=True, action='store', help='Name of the appointment')
@@ -76,6 +82,18 @@ class SmartTabletCmd(cmd2.Cmd):
         self.account_key = args.key
         self.logged_in = True
         
+    @cmd2.with_argparser(_login_file_parser())
+    def do_login_file(self, args):
+        """Sign in to existing blockchain account using file with credentials"""
+        try:
+            with open(args.credentials, 'r') as f:
+                credentials = json.loads(f.read())
+                self.account_address = credentials['address']
+                self.account_key = credentials['key']
+                self.logged_in = True
+        except Exception as e:
+            print(f'Failed to sign in using credentials file!', str(e))
+    
     @cmd2.with_argparser(_new_appointment_parser())
     def do_new_appointment(self, args):
         """Creates and broadcasts a new appointment"""
