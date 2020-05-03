@@ -3,15 +3,15 @@ from datetime import datetime
 to_hour_precision = lambda t: datetime.fromtimestamp(t).replace(microsecond=0, second=0, minute=0)
 
 class AppointmentBookingContract:
-    
+
     def __init__(self, contract, w3):
         self.contract = contract
         self.w3 = w3
 
-    def add_appointment(self, name, timestamp, price):
+    def add_appointment(self, name, timestamp, price, account):
         try:
             date = datetime.timestamp(to_hour_precision(timestamp))
-            hash_tx = self.contract.functions.createAppointment(name, int(date), price).transact()
+            hash_tx = self.contract.functions.createAppointment(name, int(date), int(price)).transact({'from': account})
             self.w3.eth.waitForTransactionReceipt(hash_tx)
         except Exception as e:
             print(e)
@@ -20,9 +20,9 @@ class AppointmentBookingContract:
     def book_appointment(self, timestamp, price, account):
         try:
             date = datetime.timestamp(to_hour_precision(timestamp))
-            self.contract.functions.bookAppointment(date).transact({
+            self.contract.functions.bookAppointment(int(date)).transact({
                 'from': account,
-                'value': self.web3.toWei(price, 'ether')
+                'value': self.w3.toWei(int(price), 'ether')
             })
         except Exception as e:
             print(e)
@@ -34,7 +34,7 @@ class AppointmentBookingContract:
 
 
 class HealthDataAccessContract:
-    
+
     def __init__(self, contract, w3):
         self.contract = contract
         self.w3 = w3

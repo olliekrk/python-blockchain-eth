@@ -42,7 +42,7 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Should give 2 args: address, key]")
         else:
             self._login(args[0], args[1])
-        
+
     def do_login_file(self, arg):
         """Login with credentials from JSON file (i.e. credentials/example_credentials.json)"""
         args = parse(arg)
@@ -60,7 +60,7 @@ class HealthCareShell(cmd.Cmd):
     def do_connect(self, arg):
         """Connect to blockchain network"""
         self._connect()
-        
+
     def do_add_heartrate(self, arg):
         """Adds new heartrate entry, gets 2 args: heartrate and timestamp"""
         if self.health_data_access_handler is None:
@@ -201,20 +201,30 @@ def start_smart_listener(health_care_shell):
                 handler.add_heartrate(message['bpm'], message['timestamp'])
             except Exception as e:
                 print(f'Failed to send heart rate data to the blockchain: {str(e)}')
-                
-    # TODO: add new_appointment_callback and book_appointment_callback implementation
-    
+
+
     def new_appointment_callback(message):
-        pass # todo (inny_handler.zrob_cos)
-    
+        handler = health_care_shell.appointment_booking_handler
+        if handler is not None:
+            try:
+                handler.add_appointment(message['name'], message['timestamp'], message['price'], message['account'])
+            except Exception as e:
+                print(f'Failed to add an appointment: {str(e)}')
+
+
     def book_appointment_callback(message):
-        pass # todo
-    
+        handler = health_care_shell.appointment_booking_handler
+        if handler is not None:
+            try:
+                handler.book_appointment(message['timestamp'], message['price'], message['account'])
+            except Exception as e:
+                print(f'Failed to book an appointment: {str(e)}')
+
     try:
         listener = SmartMQTTListener(
             new_appointment_callback=new_appointment_callback,
             book_appointment_callback=book_appointment_callback,
-            heart_rate_callback=heart_rate_callback, 
+            heart_rate_callback=heart_rate_callback,
             verbose=False)
         listener.loop_forever()
     except ConnectionRefusedError as e:
@@ -225,11 +235,11 @@ def start_smart_listener(health_care_shell):
         print('Listener has encountered an error.:', str(e))
     finally:
         listener.disconnect()
-    
+
 
 if __name__ == '__main__':
     health_care_shell = HealthCareShell()
-    
+
     t = threading.Thread(target=start_smart_listener, args=(health_care_shell,))
     t.daemon = True
     t.start()

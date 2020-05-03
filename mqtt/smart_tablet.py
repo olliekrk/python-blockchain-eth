@@ -65,7 +65,8 @@ def _new_appointment_parser():
 def _book_appointment_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--timestamp', required=True, type=int, action='store', help='Timestamp of the appointment')
-    return parser               
+    parser.add_argument('-p', '--price', required=True, type=int, action='store', help='Gas price of the appointment')
+    return parser
         
 class SmartTabletCmd(cmd2.Cmd):
     prompt = 'e-health-booking>'
@@ -116,6 +117,7 @@ class SmartTabletCmd(cmd2.Cmd):
             self.tablet.book_appointment({
                 'timestamp' : args.timestamp,
                 'account' : self.account_address,
+                'price' : args.price,
                 'key' : self.account_key
             })
         else:
