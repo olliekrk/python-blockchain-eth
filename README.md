@@ -42,7 +42,7 @@ Some flow examples:
 '''
 
 ##### How to run smart band script
-`python3 smart_band.py ../credentials/example_credentials.json [host] [port]`
+`python3 smart_band.py [host] [port]`
 Host and port default to `127.0.0.1:1883`.
 
 #### Tools:

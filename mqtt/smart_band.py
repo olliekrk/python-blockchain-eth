@@ -24,10 +24,8 @@ def _timestamp_now():
     return int(round(time.time())*1000)
 
 class SmartBand(mqtt.Client):
-    def __init__(self, account_address, account_key, host=DEFAULT_HOST, port=DEFAULT_PORT):
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
         super().__init__(f'SmartBand_{_timestamp_now()}')
-        self.account_address = account_address
-        self.account_key = account_key
         self.connect_async(host, port, KEEPALIVE)
         
     def on_connect(self, client, userdata, flags, rc):
@@ -64,36 +62,18 @@ class SmartBand(mqtt.Client):
             yield {
                 'bpm' : random.randrange(BPM_MIN, BPM_MAX, BPM_STEP),
                 'timestamp' : _timestamp_now(),
-                'account' : self.account_address,
-                'key' : self.account_key
             }
-
-
-def load_credentials(file_path):
-    try:
-        with open(file_path, 'r') as f:
-            credentials = json.loads(f.read())
-            return credentials['address'], credentials['key']
-    except Exception as e:
-        print(f'Failed to login with credentials from {file_path} file')
 
 
 def _run():
     args = sys.argv
-    usage = f"Usage: python3 {args[0]} <credentials_file_path> [host] [port]"
-    
-    if len(args) < 2:
-        print('Invalid number of arguments.')
-        print(usage)    
-        sys.exit(1)
-    
-    account_address, account_key = load_credentials(args[1])
-    host = DEFAULT_HOST if len(args) < 3 else args[2]
-    port = int(DEFAULT_PORT if len(args) < 4 else args[3])
+    print(f"Usage: python3 {args[0]} [host] [port]")
+    host = DEFAULT_HOST if len(args) < 2 else args[1]
+    port = int(DEFAULT_PORT if len(args) < 3 else args[2])
     
     random.seed()
     try:
-        band = SmartBand(account_address, account_key, host, port)
+        band = SmartBand(host, port)
     except ConnectionRefusedError as e:
         print(f'Failed to connect to MQTT. Default configuration is {DEFAULT_HOST}:{DEFAULT_PORT}')
         sys.exit(1)
