@@ -59,7 +59,7 @@ contract AppointmentBooking {
         require(!appointments[_date].isCreated);
         require(
             msg.sender == doctor,
-            "Only owner can add a measurement"
+            "Only owner can add an appointment"
         );
 
 
@@ -76,13 +76,17 @@ contract AppointmentBooking {
 
     function bookAppointment(uint256 _date) public payable {
 
-        require(appointments[_date].isCreated);
+        require(appointments[_date].isCreated,
+        "This date doesn't exist");
 
         Appointment memory _appointment = appointments[_date];
-        require(_appointment.patient == address(0));
+        require(_appointment.patient == address(0),
+        "This appointment is reserved");
 
-        require(msg.value >= _appointment.price);
-        require(doctor != msg.sender);
+        require(msg.value >= _appointment.price,
+        "The price is to small");
+        require(doctor != msg.sender,
+        "Doctor can't reserve own visit");
 
 
         _appointment.patient = msg.sender;
