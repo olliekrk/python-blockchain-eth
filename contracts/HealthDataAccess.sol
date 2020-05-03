@@ -36,7 +36,6 @@ contract HealthDataAccess {
                 timestamp: _timestamp,
                 bpm: _bpm
             }));
-        emit MeasurementCreated(_timestamp, _bpm);
     }
 
     function getLastMeasurement() public view
