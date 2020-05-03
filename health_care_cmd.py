@@ -1,14 +1,15 @@
 import cmd, sys
 import threading
 from datetime import datetime
-
 import contract_deployer
 from connector import Web3Connector, NETWORK_URL
-from mqtt import smart_listener
+from mqtt import SmartMQTTListener
 
+# Convert a series of zero or more numbers to an argument tuple
+parse = lambda arg: tuple(arg.split())
 
 class AppointmentBooking:
-
+    
     def __init__(self, contract, w3):
         self.contract = contract
         self.w3 = w3
@@ -39,7 +40,7 @@ class AppointmentBooking:
 
 
 class HealthDataAccessContract:
-
+    
     def __init__(self, contract, w3):
         self.contract = contract
         self.w3 = w3
@@ -94,7 +95,6 @@ class HealthDataAccessContract:
 class HealthCareShell(cmd.Cmd):
     intro = 'Welcome to the Healthcare shell.   Type help or ? to list commands.\n'
     prompt = '>'
-    # file = None
 
     w3 = None
     contract = None
@@ -109,7 +109,6 @@ class HealthCareShell(cmd.Cmd):
             self.w3 = Web3Connector(NETWORK_URL)
             self.contract_loader = contract_deployer.ContractLoader(self.w3.w3)
             print("[0][Connection successful]")
-            # print(self.w3)
         except:
             print("[1][Connection error]")
 
@@ -230,29 +229,42 @@ class HealthCareShell(cmd.Cmd):
             print("[0][Using given contract]")
 
         except Exception as e:
-            # print(e)
             print("[1][Could not read a contract from " + str(file_name) + "]")
 
     def _login(self, account, key):
-        # print(str(account))
-        # print(str(key))
         try:
             self.deployer = contract_deployer.ContractDeployer(self.w3.w3, str(account), str(key))
-            print("[0][Login succesfull]")
+            print("[0][Login successful]")
         except:
             print("[1][Login unsuccessful]")
 
 
-def parse(arg):
-    """Convert a series of zero or more numbers to an argument tuple"""
-    return tuple(arg.split())
 
+def start_smart_listener(health_care):
+    def heart_rate_callback(message):
+        try:
+            health_care.do_add_heartrate(message['bpm'], message['timestamp'])
+        except Exception as e:
+            print(f'Failed to send heart rate data to the blockchain: {str(e)}')
+    
+    try:
+        listener = SmartMQTTListener(heart_rate_callback=heart_rate_callback)
+        listener.loop_forever()
+    except ConnectionRefusedError as e:
+        print(f'Failed to connect to MQTT. Default configuration is {DEFAULT_HOST}:{DEFAULT_PORT}')
+    except KeyboardInterrupt:
+        print('Shutting down the listener...')
+    except Exception as e:
+        print('Listener has encountered an error.:', str(e))
+    finally:
+        listener.disconnect()
+    
 
 if __name__ == '__main__':
-    h = HealthCareShell()
-
-    t = threading.Thread(target=smart_listener._run, args=(h,))
+    health_care = HealthCareShell()
+    
+    t = threading.Thread(target=start_smart_listener, args=(health_care,))
     t.daemon = True
     t.start()
 
-    h.cmdloop()
+    health_care.cmdloop()

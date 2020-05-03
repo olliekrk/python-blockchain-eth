@@ -5,9 +5,10 @@ import pprint
 
 from solcx import compile_source, get_solc_version, install_solc
 
+SOLC_VERSION = 'v0.5.7'
+install_solc(SOLC_VERSION)
+
 current_time = lambda: int(round(time.time() * 1000))
-#install_solc('v0.5.7'
-print(get_solc_version())
 
 # compile .sol
 def _compile_source_file(file_path):

@@ -4,7 +4,7 @@ import json
 import cmd2
 import argparse
 import paho.mqtt.client as mqtt
-from mqtt_defaults import *
+from mqtt_defaults import DEFAULT_HOST, DEFAULT_PORT, KEEPALIVE, SMART_APPOINTMENTS_NEW_TOPIC, SMART_APPOINTMENTS_BOOK_TOPIC
 
 def _timestamp_now():
     return int(round(time.time())*1000)
@@ -34,6 +34,13 @@ class SmartTablet(mqtt.Client):
         print(f'({mid}) Booking appointment: {message}')
  
 
+def _login_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--address', required=True, action='store', help='Address of the account to log into')
+    parser.add_argument('-k', '--key', required=True, action='store', help='Private key of the account')
+    return parser
+
+
 def _new_appointment_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--name', required=True, action='store', help='Name of the appointment')
@@ -53,23 +60,41 @@ class SmartTabletCmd(cmd2.Cmd):
     def __init__(self, tablet):
         super().__init__()
         self.tablet = tablet
+        self.logged_in = False
         
+    @cmd2.with_argparser(_login_parser())
+    def do_login(self, args):
+        """Sign in to existing blockchain account"""
+        self.account_address = args.address
+        self.account_key = args.key
+        self.logged_in = True
         
     @cmd2.with_argparser(_new_appointment_parser())
     def do_new_appointment(self, args):
         """Creates and broadcasts a new appointment"""
-        self.tablet.new_appointment({
-            'name' : args.name,
-            'timestamp' : args.timestamp,
-            'price' : args.price            
-        })
+        if self.logged_in:
+            self.tablet.new_appointment({
+                'name' : args.name,
+                'timestamp' : args.timestamp,
+                'price' : args.price,
+                'account' : self.account_address,
+                'key' : self.account_key    
+            })
+        else:
+            print('Please sign in first!')
+            
     
     @cmd2.with_argparser(_book_appointment_parser())
     def do_book_appointment(self, args):
         """Books an appointment if available"""
-        self.tablet.book_appointment({
-            'timestamp' : args.timestamp
-        })
+        if self.logged_in:
+            self.tablet.book_appointment({
+                'timestamp' : args.timestamp,
+                'account' : self.account_address,
+                'key' : self.account_key
+            })
+        else:
+            print('Please sign in first!')
     
 
 def _run():
