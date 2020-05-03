@@ -2,7 +2,15 @@ import sys
 import time
 import json
 import paho.mqtt.client as mqtt
-from mqtt_defaults import DEFAULT_HOST, DEFAULT_PORT, KEEPALIVE, DEFAULT_QOS, HEART_RATE_TOPIC, SMART_APPOINTMENTS_BOOK_TOPIC, SMART_APPOINTMENTS_NEW_TOPIC
+
+DEFAULT_HOST = '127.0.0.1'
+DEFAULT_PORT = 1883
+DEFAULT_QOS = 1
+KEEPALIVE = 30
+
+HEART_RATE_TOPIC = 'smart/heart_rate'
+SMART_APPOINTMENTS_NEW_TOPIC = 'smart/appointment/new'
+SMART_APPOINTMENTS_BOOK_TOPIC = 'smart/appointment/book'
 
 def _timestamp_now():
     return int(round(time.time())*1000)
@@ -14,12 +22,14 @@ class SmartMQTTListener(mqtt.Client):
                  port=DEFAULT_PORT, 
                  heart_rate_callback=None,
                  new_appointment_callback=None,
-                 book_appointment_callback=None):
+                 book_appointment_callback=None,
+                 verbose=True):
         super().__init__(f'SmartListener_{_timestamp_now()}')
         self.connect_async(host, port, KEEPALIVE)
         self.heart_rate_callback = heart_rate_callback
         self.new_appointment_callback = new_appointment_callback
         self.book_appointment_callback = book_appointment_callback
+        self.verbose = verbose
         
     def listen_on_topic(self, topic, callback, qos=DEFAULT_QOS):
         self.message_callback_add(topic, callback)
@@ -45,9 +55,10 @@ class SmartMQTTListener(mqtt.Client):
     def default_callback(self, callback):
         def handler(client, userdata, message):
             message_json = json.loads(message.payload)
-            print(f'Topic: [{message.topic}] Message: [{message_json}]')
-            if self.callback is not None:
-                self.callback(message_json)
+            if self.verbose:
+                print(f'Topic: [{message.topic}] Message: [{message_json}]')
+            if callback is not None:
+                callback(message_json)
         return handler
       
              

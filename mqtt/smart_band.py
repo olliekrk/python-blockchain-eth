@@ -5,8 +5,14 @@ import json
 import backoff
 import asyncio
 import paho.mqtt.client as mqtt
-from mqtt_defaults import DEFAULT_HOST, DEFAULT_PORT, KEEPALIVE, BACKOFF_INTERVAL, HEART_RATE_TOPIC
 
+DEFAULT_HOST = '127.0.0.1'
+DEFAULT_PORT = 1883
+DEFAULT_QOS = 1
+KEEPALIVE = 30
+BACKOFF_INTERVAL = 1
+
+HEART_RATE_TOPIC = 'smart/heart_rate'
 MEASUREMENT_INTERVAL_MAX = 3 # 0-3 s delay in publishing measurement data
 
 """
@@ -47,7 +53,7 @@ class SmartBand(mqtt.Client):
     
     def _publish_measurement(self, measurement):
         message = json.dumps(measurement)
-        mid = self.publish(topic=HEART_RATE_TOPIC, payload=message, qos=1)[1]
+        mid = self.publish(HEART_RATE_TOPIC, message, DEFAULT_QOS)[1]
         print(f'({mid}) Publishing message: {message}')
     
     def _heart_rate_measurement(self):
@@ -63,19 +69,27 @@ class SmartBand(mqtt.Client):
             }
 
 
+def load_credentials(file_path):
+    try:
+        with open(file_path, 'r') as f:
+            credentials = json.loads(f.read())
+            return credentials['address'], credentials['key']
+    except Exception as e:
+        print(f'Failed to login with credentials from {file_path} file')
+
+
 def _run():
     args = sys.argv
-    usage = f"Usage: python3 {args[0]} <account_address> <account_key> [host] [port]"
+    usage = f"Usage: python3 {args[0]} <credentials_file_path> [host] [port]"
     
     if len(args) < 2:
         print('Invalid number of arguments.')
         print(usage)    
         sys.exit(1)
     
-    account_address = args[1]
-    account_key = args[2]
-    host = DEFAULT_HOST if len(args) < 4 else args[3]
-    port = int(DEFAULT_PORT if len(args) < 5 else args[4])
+    account_address, account_key = load_credentials(args[1])
+    host = DEFAULT_HOST if len(args) < 3 else args[2]
+    port = int(DEFAULT_PORT if len(args) < 4 else args[3])
     
     random.seed()
     try:

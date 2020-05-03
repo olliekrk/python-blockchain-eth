@@ -10,41 +10,40 @@
 '''
 After running Ganache:
 
-deploy_test - after changing values inside, you can test contract deployment
-test - after changing addres you can test creating new medical apoointment 
-(sends etheraum between accounts)
-
-health_care_cmd - command line interface (can be connected with IoT device)
-health_care_cmd test flow:
+health_care_shell - command line interface (can be connected with IoT device)
+health_care_shell test flow:
 * run
 * type following commands:
-* connect
+* `connect`
 >(connects to blockchain)
-* login (account address from ganache) (account pk from ganache)
+* `login (account address from ganache) (account pk from ganache)`
+* `login_file (path to JSON file with credentials: address and key)` // alternative
 >(like login 0x344.... 12rf21ccac22e...)
-* deploy_data_access_contract
+* `deploy_data_access_contract`
 >(creates and deploys smart contract for given account  
   after deployment, it saves json file in cache dir  
 you can then connect to existing contract by typing:  
 use_contract (file name) )
-* add_heartrate (heartrate) (timestamp)
+* `add_heartrate (heartrate) (timestamp)`
 >(adds new heartrate measurement entry)
-* get_my_data
+* `get_my_data`
 >(shows all data from selected previously contract)
 
-You can also in health_care_cmd use commands:
-grant_access (account address)
-- that grants access to reading data for given account (only contracts owner can execute this)
-revoke_access  (account address)
-- that revokes access to reading data for given account (only contracts owner can execute this)
+You can also in health_care_shell use commands:
+- `grant_access (account address)` - that grants access to reading data for given account (only contracts owner can execute this)
+- `revoke_access  (account address)` - that revokes access to reading data for given account (only contracts owner can execute this)
 
 Some flow examples:
 
-![Image1](./flow1.png)
-![Image2](./flow.png)
+![Image1](./screenshots/flow1.png)
+![Image2](./screenshots/flow.png)
 
 
 '''
+
+##### How to run smart band script
+`python3 smart_band.py ../credentials/example_credentials.json [host] [port]`
+Host and port default to `127.0.0.1:1883`.
 
 #### Tools:
 * Python (version >= 3.6.9)

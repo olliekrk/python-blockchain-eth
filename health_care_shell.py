@@ -1,103 +1,21 @@
 import cmd, sys
 import threading
-from datetime import datetime
-import contract_deployer
-from connector import Web3Connector, NETWORK_URL
+import json
+from web3 import Web3
+from contract_deployer import ContractDeployer, ContractLoader
+from contract_handlers import HealthDataAccessContract, AppointmentBookingContract
 from mqtt import SmartMQTTListener
+
+NETWORK_URL = "http://127.0.0.1:7545"
 
 # Convert a series of zero or more numbers to an argument tuple
 parse = lambda arg: tuple(arg.split())
-
-class AppointmentBooking:
-    
-    def __init__(self, contract, w3):
-        self.contract = contract
-        self.w3 = w3
-
-    def add_appointment(self, name, timestamp, price):
-        try:
-            date = datetime.fromtimestamp(timestamp).replace(microsecond=0, second=0, minute=0)
-            hash_tx = self.contract.functions.createAppointment(name, int(datetime.timestamp(date)), price).transact()
-            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
-
-            print(receip)
-        except Exception as e:
-            print(e)
-            print("[1][Error!]")
-
-    def book_appointment(self, timestamp, price, account):
-        try:
-            date = datetime.fromtimestamp(timestamp).replace(microsecond=0, second=0, minute=0)
-            result = self.contract.functions.bookAppointment(datetime.timestamp(date)).transact(
-                {'from': account, 'value': self.web3.toWei(price, 'ether')})
-            print(result)
-        except Exception as e:
-            print(e)
-            print("[1][Error!]")
-
-    def print_appointments(self):
-        print(self.contract.functions.printAppointments().call())
-
-
-class HealthDataAccessContract:
-    
-    def __init__(self, contract, w3):
-        self.contract = contract
-        self.w3 = w3
-
-    def add_heartrate(self, heartrate, date):
-        try:
-            hash_tx = self.contract.functions.addMeasurement(int(heartrate), int(date)).transact()
-            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
-
-            print(receip)
-        except Exception as e:
-            print(e)
-            print("[1][Error!]")
-
-    def get_data(self):
-        try:
-            result = self.contract.functions.getMeasurements().call()
-            print(result)
-        except Exception as e:
-            print(e)
-            print("[1][Error!]")
-
-    def get_last_data(self):
-        try:
-            result = self.contract.functions.getLastMeasurement().call()
-            print(result)
-        except Exception as e:
-            print(e)
-            print("[1][Error!]")
-
-    def grant_access(self, argument):
-        try:
-            hash_tx = self.contract.functions.grantAccess(argument).transact()
-            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
-
-            print(receip)
-        except Exception as e:
-            print(e)
-            print("[1][Error!]")
-
-    def revoke_access(self, argument):
-        try:
-            hash_tx = self.contract.functions.revokeAccess(argument).transact()
-            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
-
-            print(receip)
-        except Exception as e:
-            print(e)
-            print("[1][Error!]")
-
 
 class HealthCareShell(cmd.Cmd):
     intro = 'Welcome to the Healthcare shell.   Type help or ? to list commands.\n'
     prompt = '>'
 
     w3 = None
-
     contract_loader = None
     deployer = None
     contract_access = None
@@ -107,8 +25,8 @@ class HealthCareShell(cmd.Cmd):
 
     def _connect(self):
         try:
-            self.w3 = Web3Connector(NETWORK_URL)
-            self.contract_loader = contract_deployer.ContractLoader(self.w3.w3)
+            self.w3 = Web3(Web3.HTTPProvider(NETWORK_URL))
+            self.contract_loader = ContractLoader(self.w3)
             print("[0][Connection successful]")
         except:
             print("[1][Connection error]")
@@ -124,11 +42,25 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Should give 2 args: address, key]")
         else:
             self._login(args[0], args[1])
+        
+    def do_login_file(self, arg):
+        """Login with credentials from JSON file (i.e. credentials/example_credentials.json)"""
+        args = parse(arg)
+        if len(args) != 1:
+            print("[1][Missing path to JSON credentials file]")
+        else:
+            try:
+                with open(args[0], 'r') as f:
+                    credentials = json.loads(f.read())
+                    print(f'Using credentials: {credentials}')
+                    self._login(credentials['address'], credentials['key'])
+            except Exception as e:
+                print(f'Failed to login with credentials from {args[0]} file')
 
     def do_connect(self, arg):
         """Connect to blockchain network"""
         self._connect()
-
+        
     def do_add_heartrate(self, arg):
         """Adds new heartrate entry, gets 2 args: heartrate and timestamp"""
         if self.health_data_access_handler is None:
@@ -209,17 +141,17 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Login first!]")
             return
         try:
-            result = self.deployer.deploy_contract(data_argument, 'contracts/AppointmentBooking')
+            result = self.deployer.deploy_contract(data_argument, 'AppointmentBooking')
             self.contract_booking = self.contract_loader.load_contract(result["contract_address"],
-                                                                       result["contract_abi"])
-            self.appointment_booking_handler = AppointmentBooking(self.contract_access, self.w3.w3)
+                                                                       result["contract_abi"],
+                                                                       cache=False)
+            self.appointment_booking_handler = AppointmentBookingContract(self.contract_access, self.w3)
             print("[0][Deployed and loaded contract]")
         except Exception as e:
             print(e)
 
     def do_deploy_data_access_contract(self, arg):
-        """Create new smart contract for logged account and deployes it. Also selects created contracs as currently
-        used """
+        """Create new smart contract for logged account and deploys it. Also selects created contract as currently used """
         args = parse(arg)
         data_argument = None
         if len(args) != 1:
@@ -232,22 +164,22 @@ class HealthCareShell(cmd.Cmd):
             print("[1][Login first!]")
             return
         try:
-            result = self.deployer.deploy_contract(data_argument)
-            self.contract_access = self.contract_loader.load_contract(result["contract_address"], result["contract_abi"])
-            self.health_data_access_handler = HealthDataAccessContract(self.contract_access, self.w3.w3)
+            result = self.deployer.deploy_contract(data_argument, 'HealthDataAccess')
+            self.contract_access = self.contract_loader.load_contract(result["contract_address"], result["contract_abi"], cache=False)
+            self.health_data_access_handler = HealthDataAccessContract(self.contract_access, self.w3)
             print("[0][Deployed and loaded contract]")
-        except:
-            print("[1][Deploying unsuccessful]")
+        except Exception as e:
+            print("[1][Deploying unsuccessful]", str(e))
 
     def _read_contract(self, file_name):
         try:
             contract_type = file_name.split('_')[0]
             if contract_type == 'HealthDataAccess':
                 self.contract_access = self.contract_loader.load_by_name(file_name)
-                self.health_data_access_handler = HealthDataAccessContract(self.contract_access, self.w3.w3)
+                self.health_data_access_handler = HealthDataAccessContract(self.contract_access, self.w3)
             else:
                 self.contract_booking = self.contract_loader.load_by_name(file_name)
-                self.appointment_booking_handler = AppointmentBooking(self.contract_booking, self.w3.w3)
+                self.appointment_booking_handler = AppointmentBookingContract(self.contract_booking, self.w3)
             print("[0][Using given contract]")
 
         except Exception as e:
@@ -255,25 +187,26 @@ class HealthCareShell(cmd.Cmd):
 
     def _login(self, account, key):
         try:
-            self.deployer = contract_deployer.ContractDeployer(self.w3.w3, str(account), str(key))
+            self.deployer = ContractDeployer(self.w3, str(account), str(key))
             print("[0][Login successful]")
         except:
             print("[1][Login unsuccessful]")
 
 
-
-def start_smart_listener(health_care):
+def start_smart_listener(health_care_shell):
     def heart_rate_callback(message):
-        try:
-            health_care.do_add_heartrate(message['bpm'], message['timestamp'])
-        except Exception as e:
-            print(f'Failed to send heart rate data to the blockchain: {str(e)}')
+        handler = health_care_shell.health_data_access_handler
+        if handler is not None:
+            try:
+                handler.add_heartrate(message['bpm'], message['timestamp'])
+            except Exception as e:
+                print(f'Failed to send heart rate data to the blockchain: {str(e)}')
     
     try:
-        listener = SmartMQTTListener(heart_rate_callback=heart_rate_callback)
+        listener = SmartMQTTListener(heart_rate_callback=heart_rate_callback, verbose=False)
         listener.loop_forever()
     except ConnectionRefusedError as e:
-        print(f'Failed to connect to MQTT. Default configuration is {DEFAULT_HOST}:{DEFAULT_PORT}')
+        print('Failed to connect to MQTT.')
     except KeyboardInterrupt:
         print('Shutting down the listener...')
     except Exception as e:
@@ -283,10 +216,10 @@ def start_smart_listener(health_care):
     
 
 if __name__ == '__main__':
-    health_care = HealthCareShell()
+    health_care_shell = HealthCareShell()
     
-    t = threading.Thread(target=start_smart_listener, args=(health_care,))
+    t = threading.Thread(target=start_smart_listener, args=(health_care_shell,))
     t.daemon = True
     t.start()
 
-    health_care.cmdloop()
+    health_care_shell.cmdloop()

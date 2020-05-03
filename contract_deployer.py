@@ -11,20 +11,20 @@ install_solc(SOLC_VERSION)
 current_time = lambda: int(round(time.time() * 1000))
 
 
-# compile .sol
-def _compile_source_file(file_path):
-    with open(file_path+'.sol', 'r') as f:
+# compile .sol file
+def _compile_source_file(contract_path):
+    with open(contract_path, 'r') as f:
         source = f.read()
     return compile_source(source)
 
 
-# save contract address and ABI
+# save contract address and ABI to file
 def _log_deployment_result(result, file_path):
     with open(file_path, 'w') as f:
         json.dump(result, f, indent=4)
 
 
-# build contract template
+# get contract template
 def _contract_deployment(w3, contract_compiled):
     return w3.eth.contract(
         abi=contract_compiled['abi'],
@@ -38,9 +38,8 @@ class ContractDeployer:
         self.w3.eth.defaultAccount = account
         self.private_key = private_key
 
-    # build health data access contract and return its address and ABI on success        
-    def deploy_contract(self, data, path='contracts/HealthDataAccess'):
-        compiled = _compile_source_file(path)
+    def deploy_contract(self, data, contract_name):
+        compiled = _compile_source_file(f'contracts/{contract_name}.sol')
         contract_id, contract_compiled = compiled.popitem()
 
         deployment = _contract_deployment(self.w3, contract_compiled)
@@ -55,9 +54,8 @@ class ContractDeployer:
                 'contract_address': tx_receipt['contractAddress']
             }
 
-            cache_name = path.split('/')
             print('Deploy successful. Cost: {}'.format(tx_receipt['cumulativeGasUsed']))
-            _log_deployment_result(result, 'cache/{}_{}.json'.format(cache_name[1], current_time()))
+            _log_deployment_result(result, f'cache/{contract_name}_{current_time()}.json')
             return result
         except Exception as e:
             print('Failed to deploy: {}'.format(str(e)))

@@ -4,7 +4,14 @@ import json
 import cmd2
 import argparse
 import paho.mqtt.client as mqtt
-from mqtt_defaults import DEFAULT_HOST, DEFAULT_PORT, KEEPALIVE, SMART_APPOINTMENTS_NEW_TOPIC, SMART_APPOINTMENTS_BOOK_TOPIC
+
+DEFAULT_HOST = '127.0.0.1'
+DEFAULT_PORT = 1883
+DEFAULT_QOS = 1
+KEEPALIVE = 30
+
+SMART_APPOINTMENTS_NEW_TOPIC = 'smart/appointment/new'
+SMART_APPOINTMENTS_BOOK_TOPIC = 'smart/appointment/book'
 
 def _timestamp_now():
     return int(round(time.time())*1000)
@@ -25,12 +32,12 @@ class SmartTablet(mqtt.Client):
         
     def new_appointment(self, appointment):
         message = json.dumps(appointment)
-        mid = self.publish(topic=SMART_APPOINTMENTS_NEW_TOPIC, payload=message, qos=1)[1]
+        mid = self.publish(SMART_APPOINTMENTS_NEW_TOPIC, message, DEFAULT_QOS)[1]
         print(f'({mid}) Publishing new appointment: {message}')
     
     def book_appointment(self, appointment):
         message = json.dumps(appointment)
-        mid = self.publish(topic=SMART_APPOINTMENTS_BOOK_TOPIC, payload=message, qos=1)[1]
+        mid = self.publish(SMART_APPOINTMENTS_BOOK_TOPIC, message, DEFAULT_QOS)[1]
         print(f'({mid}) Booking appointment: {message}')
  
 
