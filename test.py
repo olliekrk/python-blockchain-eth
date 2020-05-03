@@ -166,8 +166,38 @@ contract = web3.eth.contract(address=address, abi=abi)
 now = datetime.now()
 
 timestamp = datetime.timestamp(now)
+print(datetime.fromtimestamp(1588238738).replace(microsecond=0, second=0, minute=0))
 # print("timestamp =", timestamp)
+print(datetime.timestamp(datetime.now().replace(microsecond=0, second=0, minute=0)))
+print(web3.eth.accounts[1])
+# print(contract.functions.createAppointment("dermatolog",int(timestamp),10).transact())
+# print(contract.functions.bookAppointment(int(timestamp)).transact({'from': web3.eth.accounts[1],'value': web3.toWei(2,'ether')}))
+# print(contract.functions.printAppointments().call())
 
-print(contract.functions.createAppointment("dermatolog",int(timestamp),10).transact())
-print(contract.functions.bookAppointment(int(timestamp)).transact({'from': web3.eth.accounts[1],'value': web3.toWei(2,'ether')}))
-print(contract.functions.printAppointments().call())
+
+
+class AppointmentBooking:
+
+    def __init__(self, contract, w3):
+        self.contract = contract
+        self.w3 = w3
+
+    def add_appointment(self, name, timestamp, price):
+        try:
+            date = datetime.fromtimestamp(timestamp).replace(microsecond=0, second=0, minute=0)
+            hash_tx = self.contract.functions.createAppointment(name, int(datetime.timestamp(date)),price).transact()
+            receip = self.w3.eth.waitForTransactionReceipt(hash_tx)
+
+            print(receip)
+        except Exception as e:
+            print(e)
+            print("[1][Error!]")
+
+    def book_appointment(self, timestamp, price, account):
+        try:
+            date = datetime.fromtimestamp(timestamp).replace(microsecond=0, second=0, minute=0)
+            result = self.contract.functions.bookAppointment(datetime.timestamp(date)).transact({'from': account,'value': web3.toWei(price,'ether')})
+            print(result)
+        except Exception as e:
+            print(e)
+            print("[1][Error!]")

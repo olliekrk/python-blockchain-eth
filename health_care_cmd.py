@@ -97,12 +97,13 @@ class HealthCareShell(cmd.Cmd):
     prompt = '>'
 
     w3 = None
-    contract = None
+
     contract_loader = None
-    contract_access = None
     deployer = None
+    contract_access = None
     contract_booking = None
-    appointment_booking = None
+    health_data_access_handler = None
+    appointment_booking_handler = None
 
     def _connect(self):
         try:
@@ -130,56 +131,56 @@ class HealthCareShell(cmd.Cmd):
 
     def do_add_heartrate(self, arg):
         """Adds new heartrate entry, gets 2 args: heartrate and timestamp"""
-        if self.contract_access is None:
+        if self.health_data_access_handler is None:
             print("[1][Not selected contract!]")
             return
         arguments = parse(arg)
         if len(arguments) != 2:
             print("[1][2 args expected: bpm and timestamp]")
         else:
-            self.contract_access.add_heartrate(arguments[0], arguments[1])
+            self.health_data_access_handler.add_heartrate(arguments[0], arguments[1])
 
     def do_get_my_data(self, arg):
         """Gets list of all heartrate data from contract selected previously"""
-        if self.contract_access is None:
+        if self.health_data_access_handler is None:
             print("[1][Not selected contract!]")
             return
         try:
-            self.contract_access.get_data()
+            self.health_data_access_handler.get_data()
         except:
             print("[1][Error]")
 
     def do_get_my_last_data(self, arg):
         """Gets last heartrate data from contract selected previously"""
-        if self.contract_access is None:
+        if self.health_data_access_handler is None:
             print("[1][Not selected contract!]")
             return
         try:
-            self.contract_access.get_last_data()
+            self.health_data_access_handler.get_last_data()
         except:
             print("[1][Error]")
 
     def do_grant_access(self, arg):
         """Grants access to heartrate data from contract selected previously. Takes account as argument"""
-        if self.contract_access is None:
+        if self.health_data_access_handler is None:
             print("[1][Not selected contract!]")
             return
         argument = parse(arg)
         if len(argument) == 0:
             print("[1][Not provided any argument]")
         else:
-            self.contract_access.grant_access(argument[0])
+            self.health_data_access_handler.grant_access(argument[0])
 
     def do_revoke_access(self, arg):
         """Revokes access to heartrate data from contract selected previously. Takes account as argument"""
-        if self.contract_access is None:
+        if self.health_data_access_handler is None:
             print("[1][Not selected contract!]")
             return
         argument = parse(arg)
         if len(argument) == 0:
             print("[1][Not provided any argument]")
         else:
-            self.contract_access.revoke_access(argument[0])
+            self.health_data_access_handler.revoke_access(argument[0])
 
     def do_use_contract(self, arg):
         """Use contract from given file"""
@@ -196,14 +197,22 @@ class HealthCareShell(cmd.Cmd):
     def do_deploy_appointment_booking_contract(self, arg):
         """Create new smart contract for logged account and deployes it. Also selects created contracs as currently
         used """
+        args = parse(arg)
+        data_argument = None
+        if len(args) != 1:
+            print("[1][Should give data argument")
+            return
+        else:
+            data_argument = arg[0]
+
         if not self.deployer:
             print("[1][Login first!]")
             return
         try:
-            result = self.deployer.deploy_data_access_contract("Magic_String", 'contracts/AppointmentBooking.sol')
+            result = self.deployer.deploy_contract(data_argument, 'contracts/AppointmentBooking')
             self.contract_booking = self.contract_loader.load_contract(result["contract_address"],
                                                                        result["contract_abi"])
-            self.appointment_booking = AppointmentBooking(self.contract, self.w3.w3)
+            self.appointment_booking_handler = AppointmentBooking(self.contract_access, self.w3.w3)
             print("[0][Deployed and loaded contract]")
         except Exception as e:
             print(e)
@@ -211,21 +220,34 @@ class HealthCareShell(cmd.Cmd):
     def do_deploy_data_access_contract(self, arg):
         """Create new smart contract for logged account and deployes it. Also selects created contracs as currently
         used """
+        args = parse(arg)
+        data_argument = None
+        if len(args) != 1:
+            print("[1][Should give data argument")
+            return
+        else:
+            data_argument = arg[0]
+
         if not self.deployer:
             print("[1][Login first!]")
             return
         try:
-            result = self.deployer.deploy_data_access_contract("Magic_String")
-            self.contract = self.contract_loader.load_contract(result["contract_address"], result["contract_abi"])
-            self.contract_access = HealthDataAccessContract(self.contract, self.w3.w3)
+            result = self.deployer.deploy_contract(data_argument)
+            self.contract_access = self.contract_loader.load_contract(result["contract_address"], result["contract_abi"])
+            self.health_data_access_handler = HealthDataAccessContract(self.contract_access, self.w3.w3)
             print("[0][Deployed and loaded contract]")
         except:
             print("[1][Deploying unsuccessful]")
 
     def _read_contract(self, file_name):
         try:
-            self.contract = self.contract_loader.load_by_name(file_name)
-            self.contract_access = HealthDataAccessContract(self.contract, self.w3.w3)
+            contract_type = file_name.split('_')[0]
+            if contract_type == 'HealthDataAccess':
+                self.contract_access = self.contract_loader.load_by_name(file_name)
+                self.health_data_access_handler = HealthDataAccessContract(self.contract_access, self.w3.w3)
+            else:
+                self.contract_booking = self.contract_loader.load_by_name(file_name)
+                self.appointment_booking_handler = AppointmentBooking(self.contract_booking, self.w3.w3)
             print("[0][Using given contract]")
 
         except Exception as e:

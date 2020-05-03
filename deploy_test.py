@@ -15,7 +15,7 @@ KEY = "0x9b0fc233b3d3cc5097552e0d09085884413f5ec1c46b2d3a50f7c6c62e210cbb"
 web3 = Web3(Web3.HTTPProvider(NETWORK_URL))
 
 deployer = ContractDeployer(web3, ACCOUNT, KEY)
-deploy_result = deployer.deploy_data_access_contract("*Magic String*")
+deploy_result = deployer.deploy_contract("*Magic String*")
 print(deploy_result)
 
 if deploy_result is not None:
