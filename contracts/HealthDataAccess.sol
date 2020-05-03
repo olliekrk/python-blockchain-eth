@@ -7,6 +7,8 @@ contract HealthDataAccess {
     string data; // simulates pointer to data stored in a external secured storage
     address public owner;
 
+    modifier ownerOnly() {require(msg.sender == owner, "Only owner is authorized"); _;}
+
     event DataAccessed(address _user);
     event AccessGranted(address _user);
     event AccessRevoked(address _user);
